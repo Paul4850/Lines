@@ -11,6 +11,7 @@ namespace Lines
         Red = 1,
         Green, 
         Blue,
-        Yellow
+        Yellow,
+        Purple
     }
 }

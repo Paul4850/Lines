@@ -5,6 +5,10 @@ VisualStudioVersion = 16.0.31605.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lines", "Lines\Lines.csproj", "{E2673CA5-AC69-4D80-ACA1-EDCD10F24990}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinesGame", "LinesGame\LinesGame.csproj", "{847474A0-4633-4E00-BE33-78A44C2693FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinesGame.Tests", "LinesGame.Tests\LinesGame.Tests.csproj", "{97962672-2AD9-4289-A7E3-014B4AB763CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{E2673CA5-AC69-4D80-ACA1-EDCD10F24990}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E2673CA5-AC69-4D80-ACA1-EDCD10F24990}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E2673CA5-AC69-4D80-ACA1-EDCD10F24990}.Release|Any CPU.Build.0 = Release|Any CPU
+		{847474A0-4633-4E00-BE33-78A44C2693FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{847474A0-4633-4E00-BE33-78A44C2693FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{847474A0-4633-4E00-BE33-78A44C2693FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{847474A0-4633-4E00-BE33-78A44C2693FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97962672-2AD9-4289-A7E3-014B4AB763CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97962672-2AD9-4289-A7E3-014B4AB763CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97962672-2AD9-4289-A7E3-014B4AB763CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97962672-2AD9-4289-A7E3-014B4AB763CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
