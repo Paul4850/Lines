@@ -6,9 +6,13 @@ using System.Threading.Tasks;
 
 namespace Lines
 {
-    public class Point
-    {
-        public int X {get;set;}
-        public int Y { get; set; }
-    }
+    //public class Point
+    //{
+    //    public Point(int x, int y)
+    //    { 
+        
+    //    }
+    //    public int X {get;set;}
+    //    public int Y { get; set; }
+    //}
 }

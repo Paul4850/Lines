@@ -1,4 +1,6 @@
-﻿namespace Lines
+﻿using System.Drawing;
+
+namespace Lines
 {
     interface IGame
     {

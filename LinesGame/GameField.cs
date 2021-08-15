@@ -1,5 +1,7 @@
-﻿using System;
+﻿using LinesGame;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +24,8 @@ namespace Lines
         Random ballPositionRandom = new Random();
 
         int emptyCellsNumber = 0;
+        int score = 0;
+        private int minBallsInLine = 3;
 
         public GameField(int width = 5, int height = 5, int colorNumber = 4)
         {
@@ -29,9 +33,10 @@ namespace Lines
             this.height = height;
 
             var maxColor = Enum.GetValues(typeof(BallColor)).Length;
-            this.colorNumber = Math.Max(maxColor, colorNumber);
+            this.colorNumber = Math.Min(maxColor, colorNumber);
 
             Intialize();
+            PrintField();
         }
 
         public int[,] Data { get { return data; } }
@@ -40,12 +45,12 @@ namespace Lines
 
         private void Intialize()
         {
-            data = new int[width, height];
+            data = new int[height, width];
             nextColorsToGenerate = new BallColor[ballNumberToGenerate];
 
             nextColorsToGenerate = Enumerable
                 .Repeat(0, ballNumberToGenerate)
-                .Select(i => (BallColor)colorRandom.Next(1, colorNumber))
+                .Select(i => (BallColor)colorRandom.Next(1, colorNumber + 1))
                 .ToArray();
             emptyCellsNumber = width * height;
         }
@@ -57,11 +62,42 @@ namespace Lines
 
         public void GenerateBalls()
         {
+            PrintField();
             canGenerateBalls = CanGenerateBalls;
             if (canGenerateBalls)
             {
                 DoGenerateBalls();
+                PrintField();
                 ProcessMove();
+            }
+            PrintField();
+        }
+
+        private void ProcessMove()
+        {
+            var changes = MoveProcessor.ProcessMove(data, minBallsInLine);
+            score += MoveProcessor.CalcScore(changes);
+            int cleanedCellsCount = 0;
+            changes.Values.ToList().ForEach(
+                   list =>
+                   {
+                       list.ForEach(
+                           p => data[p.Y, p.X] = 0
+                       );
+                       cleanedCellsCount += list.Count;
+                   }
+                );
+            emptyCellsNumber += cleanedCellsCount;
+        }
+
+        private void PrintField()
+        {
+            Console.WriteLine();
+            for ( int i =0; i< data.GetLength(0); i++)
+            {
+                for (int j = 0; j < data.GetLength(1); j++)
+                    Console.Write(data[i, j] + " ");
+                Console.WriteLine();
             }
         }
 
@@ -81,12 +117,7 @@ namespace Lines
         }
         public bool CanGenerateBalls => (emptyCellsNumber >= ballNumberToGenerate);
 
-        private void ProcessMove()
-        {
-
-        }
-
-
+   
         private void DoGenerateBalls()
         {
             nextColorsToGenerate.ToList().ForEach(
@@ -96,19 +127,19 @@ namespace Lines
                     var emptyCellsCount = 0;
                     int x = 0;
                     int y = 0;
-                    for (int i = 0; i < width; i++)
+                    for (int i = 0; i < height; i++)
                     { 
-                        for (int j = 0; j < height; j++)
+                        for (int j = 0; j < width; j++)
                         {
                             if (data[i, j] == 0) emptyCellsCount++;
-                            if (emptyCellsCount == position)
+                            if (emptyCellsCount == position + 1)
                             {
                                 x = j;
                                 y = i;
                                 break;
                             }
                         }
-                        if (emptyCellsCount == position)
+                        if (emptyCellsCount == position + 1)
                             break;
                     }
                     data[y, x] = (int)color;
@@ -118,7 +149,7 @@ namespace Lines
             
             nextColorsToGenerate = Enumerable
                 .Repeat(0, ballNumberToGenerate)
-                .Select(i => (BallColor)colorRandom.Next(1, colorNumber))
+                .Select(i => (BallColor)colorRandom.Next(1, colorNumber + 1))
                 .ToArray();
         }
 
