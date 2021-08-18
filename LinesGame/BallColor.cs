@@ -12,6 +12,8 @@ namespace Lines
         Green, 
         Blue,
         Yellow,
-        Purple
+        Purple,
+        Brown,
+        Navy
     }
 }

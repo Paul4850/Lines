@@ -9,11 +9,11 @@ namespace LinesGame.Tests
         [SetUp]
         public void Setup()
         {
-            int width = 4;
-            int height = 4;
-            int colors = 2;
-
-            game = new Game(width, height, colors);
+            //int width = 4;
+            //int height = 4;
+            //int colors = 2;
+            var options = new FieldOptions { Height = 4, Width = 4, ColorNumber = 3, MinBallsInLine = 3 };
+            game = new Game(options);
         }
 
 

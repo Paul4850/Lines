@@ -25,18 +25,19 @@ namespace Lines
 
         int emptyCellsNumber = 0;
         int score = 0;
-        private int minBallsInLine = 3;
+        private int minBallsInLine = 5;
 
-        public GameField(int width = 5, int height = 5, int colorNumber = 4)
+        public GameField(FieldOptions options)
         {
-            this.width = width;
-            this.height = height;
+            this.width = options.Width;
+            this.height = options.Height;
+            colorNumber = options.ColorNumber;
+            minBallsInLine = options.MinBallsInLine;
 
             var maxColor = Enum.GetValues(typeof(BallColor)).Length;
             this.colorNumber = Math.Min(maxColor, colorNumber);
 
             Intialize();
-            PrintField();
         }
 
         public int[,] Data { get { return data; } }
@@ -62,21 +63,28 @@ namespace Lines
 
         public void GenerateBalls()
         {
-            PrintField();
             canGenerateBalls = CanGenerateBalls;
             if (canGenerateBalls)
             {
                 DoGenerateBalls();
-                PrintField();
+                ConsolePrinter.PrintField(data);
                 ProcessMove();
             }
-            PrintField();
+            ConsolePrinter.PrintField(data);
+            PrintScore();
+        }
+
+        private void PrintScore()
+        {
+            Console.WriteLine("Score: {0}", score);
         }
 
         private void ProcessMove()
         {
             var changes = MoveProcessor.ProcessMove(data, minBallsInLine);
-            score += MoveProcessor.CalcScore(changes);
+            score += MoveProcessor.CalcScore(changes, minBallsInLine);
+
+
             int cleanedCellsCount = 0;
             changes.Values.ToList().ForEach(
                    list =>
@@ -90,16 +98,7 @@ namespace Lines
             emptyCellsNumber += cleanedCellsCount;
         }
 
-        private void PrintField()
-        {
-            Console.WriteLine();
-            for ( int i =0; i< data.GetLength(0); i++)
-            {
-                for (int j = 0; j < data.GetLength(1); j++)
-                    Console.Write(data[i, j] + " ");
-                Console.WriteLine();
-            }
-        }
+
 
         public void Move(Point start, Point end)
         {
@@ -117,7 +116,15 @@ namespace Lines
         }
         public bool CanGenerateBalls => (emptyCellsNumber >= ballNumberToGenerate);
 
-   
+        public Point? GetFirstEmptyPoint()
+        {
+            for (int i = 0; i < height; i++)
+                for (int j = 0; j < width; j++)
+                    if (data[i, j] == 0)
+                        return new Point(j, i);
+            return null;
+        }
+
         private void DoGenerateBalls()
         {
             nextColorsToGenerate.ToList().ForEach(

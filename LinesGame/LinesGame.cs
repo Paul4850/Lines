@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LinesGame;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -13,17 +14,16 @@ namespace Lines
         {
         }
 
-        public Game(int width, int height, int colorNumber)
+        public Game(FieldOptions options)
         {
-            _gameField = new GameField(width, height, colorNumber);
-            _width = width;
-            _height = height;
-            _colorNumber = colorNumber;
+            _options = options;
+            _gameField = new GameField(options);
         }
 
-        int _width = 5;
-        int _height = 5;
-        int _colorNumber = 4;
+        FieldOptions _options;
+        //int _width = 5;
+        //int _height = 5;
+        //int _colorNumber = 4;
         GameStatus _gameStatus;
         int _gameScore;
         IGameField _gameField;
@@ -50,7 +50,7 @@ namespace Lines
 
         public void Start()
         {
-            _gameField = new GameField(_width, _height, _colorNumber);
+            _gameField = new GameField(_options);
             _gameStatus = GameStatus.Active;
             _gameField.GenerateBalls();
         }
@@ -75,6 +75,15 @@ namespace Lines
                 return false;
             if (!_gameField.CanGenerateBalls)
                 _gameStatus = GameStatus.Finished;
+
+            var point = _gameField.GetFirstEmptyPoint();
+            if (point.HasValue)
+            {
+                var data = MoveProcessor.PrepareData(this._gameField.Data);
+                MoveProcessor.MarkCells(data, point.Value);
+                ConsolePrinter.PrintField(data, false);
+            }
+
             _gameField.GenerateBalls();
             return true;
         }

@@ -10,5 +10,6 @@ namespace Lines
         bool CanMove(Point start, Point end);
         void GenerateBalls();
         void Move(Point start, Point end);
+        Point? GetFirstEmptyPoint();
     }
 }
