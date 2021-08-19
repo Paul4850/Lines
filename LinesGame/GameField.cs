@@ -26,9 +26,11 @@ namespace Lines
         int emptyCellsNumber = 0;
         int score = 0;
         private int minBallsInLine = 5;
+        IPrinter printer = null;
 
-        public GameField(FieldOptions options)
+        public GameField(FieldOptions options, IPrinter printer)
         {
+            this.printer = printer;
             this.width = options.Width;
             this.height = options.Height;
             colorNumber = options.ColorNumber;
@@ -67,23 +69,22 @@ namespace Lines
             if (canGenerateBalls)
             {
                 DoGenerateBalls();
-                ConsolePrinter.PrintField(data);
+                printer.PrintField(data);
                 ProcessMove();
             }
-            ConsolePrinter.PrintField(data);
+            printer.PrintField(data);
             PrintScore();
         }
 
         private void PrintScore()
         {
-            Console.WriteLine("Score: {0}", score);
+            printer.PrintScore(Score);
         }
 
         private void ProcessMove()
         {
             var changes = MoveProcessor.ProcessMove(data, minBallsInLine);
-            score += MoveProcessor.CalcScore(changes, minBallsInLine);
-
+            Score += MoveProcessor.CalcScore(changes, minBallsInLine);
 
             int cleanedCellsCount = 0;
             changes.Values.ToList().ForEach(
@@ -115,6 +116,8 @@ namespace Lines
             }
         }
         public bool CanGenerateBalls => (emptyCellsNumber >= ballNumberToGenerate);
+
+        public int Score { get => score; set => score = value; }
 
         public Point? GetFirstEmptyPoint()
         {

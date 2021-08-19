@@ -4,9 +4,26 @@ using System.Text;
 
 namespace LinesGame
 {
-    public class ConsolePrinter
+    public interface IPrinter
     {
-        public static void PrintField(int [,] data , bool useLetters = true)
+        void PrintField(int[,] data, bool useLetters = true);
+        void PrintScore(int score);
+    }
+
+    public class EmptyPrinter : IPrinter
+    {
+        public void PrintField(int[,] data, bool useLetters = true)
+        {
+        }
+
+        public void PrintScore(int score)
+        {
+            ;
+        }
+    }
+    public class ConsolePrinter: IPrinter
+    {
+        public void PrintField(int [,] data , bool useLetters = true)
         {
             char[] letters = new char[] {'*', '*', '0', 'R', 'G', 'B', 'Y', 'P', 'T', 'N' };
             char[] numbers = new char[] {'*', '_', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'M' };
@@ -24,6 +41,11 @@ namespace LinesGame
                     
                 Console.WriteLine();
             }
+        }
+
+        public void PrintScore(int score)
+        {
+            Console.WriteLine("Score: {0}", score);
         }
     }
 }

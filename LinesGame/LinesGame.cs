@@ -14,13 +14,16 @@ namespace Lines
         {
         }
 
-        public Game(FieldOptions options)
+        public Game(FieldOptions options, IPrinter printer )
         {
             _options = options;
-            _gameField = new GameField(options);
+            this.printer = printer;
+            _gameField = new GameField(options, printer);
         }
 
         FieldOptions _options;
+        private readonly IPrinter printer;
+
         //int _width = 5;
         //int _height = 5;
         //int _colorNumber = 4;
@@ -50,7 +53,7 @@ namespace Lines
 
         public void Start()
         {
-            _gameField = new GameField(_options);
+            _gameField = new GameField(_options, printer);
             _gameStatus = GameStatus.Active;
             _gameField.GenerateBalls();
         }
@@ -73,15 +76,17 @@ namespace Lines
         {
             if (_gameStatus != GameStatus.Active)
                 return false;
-            if (!_gameField.CanGenerateBalls)
+            if (!_gameField.CanGenerateBalls) {
+                _gameScore = _gameField.Score;
                 _gameStatus = GameStatus.Finished;
+            }
 
             var point = _gameField.GetFirstEmptyPoint();
             if (point.HasValue)
             {
                 var data = MoveProcessor.PrepareData(this._gameField.Data);
                 MoveProcessor.MarkCells(data, point.Value);
-                ConsolePrinter.PrintField(data, false);
+                printer.PrintField(data, false);
             }
 
             _gameField.GenerateBalls();

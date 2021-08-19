@@ -13,7 +13,7 @@ namespace LinesGame.Tests
             //int height = 4;
             //int colors = 2;
             var options = new FieldOptions { Height = 4, Width = 4, ColorNumber = 3, MinBallsInLine = 3 };
-            game = new Game(options);
+            game = new Game(options, new EmptyPrinter());
         }
 
 
