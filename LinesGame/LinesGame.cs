@@ -10,69 +10,62 @@ namespace Lines
 {
     public class Game : IGame
     {
-        public Game()
-        {
-        }
-
         public Game(FieldOptions options, IPrinter printer )
         {
             _options = options;
             this.printer = printer;
             _gameField = new GameField(options, printer);
+            _strategy = new RandomStrategy();
         }
 
         FieldOptions _options;
         private readonly IPrinter printer;
-
-        //int _width = 5;
-        //int _height = 5;
-        //int _colorNumber = 4;
         GameStatus _gameStatus;
         int _gameScore;
         IGameField _gameField;
+        IStrategy _strategy;
+        int _movesCount = 0;
 
-        private void UpdateStatus()
+        public GameStatus Status { get { return _gameStatus; } }
+        public int Score { get { return _gameScore; } }
+        public int MoveCount { get { return _movesCount; } }
+
+        public void SetStrategy(IStrategy strategy)
         {
-            throw new NotImplementedException();
+            _strategy = strategy;
         }
-
-        private void UpdateScore()
-        {
-            throw new NotImplementedException();
-        }
-
-        void DoMove(Point startPoint, Point endpoint)
-        {
-
-        }
-
-        bool CanMove(Point startPoint, Point endpoint)
-        {
-            return true;
-        }
-
+        
         public void Start()
         {
             _gameField = new GameField(_options, printer);
             _gameStatus = GameStatus.Active;
             _gameField.GenerateBalls();
+            _gameScore = 0;
+            _movesCount = 0;
         }
-        public GameStatus Status { get { return _gameStatus; } }
-        public int GameScore { get { return _gameScore; } }
 
-        public bool Move(Point startPoint, Point endpoint)
+        public void Play()
         {
-            bool canMove = CanMove(startPoint, endpoint);
-            if (canMove)
+            while(_gameField.CanGenerateBalls)
             {
-                DoMove(startPoint, endpoint);
-                UpdateScore();
+                var move = _strategy.GetMove(_gameField.Data);
+                if (!_gameField.CanMove(move.StartPoint, move.EndPoint))
+                    break;
+                Move(move.StartPoint, move.EndPoint);
+                _movesCount++;
             }
-            UpdateStatus();
+            _gameScore = _gameField.Score;
+        }
+
+        bool Move(Point startPoint, Point endpoint)
+        {
+            bool canMove = _gameField.CanMove(startPoint, endpoint);
+            if (canMove)
+                _gameField.Move(startPoint, endpoint);
             return canMove;
         }
 
-        public bool Pass()
+        bool Pass()
         {
             if (_gameStatus != GameStatus.Active)
                 return false;
@@ -86,13 +79,11 @@ namespace Lines
             {
                 var data = MoveProcessor.PrepareData(this._gameField.Data);
                 MoveProcessor.MarkCells(data, point.Value);
-                printer.PrintField(data, false);
+                printer.PrintField(data, "Marked cells:", false);
             }
 
             _gameField.GenerateBalls();
             return true;
         }
     }
-
-
 }

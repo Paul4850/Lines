@@ -99,8 +99,6 @@ namespace Lines
             emptyCellsNumber += cleanedCellsCount;
         }
 
-
-
         public void Move(Point start, Point end)
         {
             bool canMove = CanMove(start, end);
@@ -110,8 +108,11 @@ namespace Lines
                 canGenerateBalls = CanGenerateBalls;
                 if (canGenerateBalls)
                 {
+                    printer.PrintField(data, "Move:");
+                    ProcessMove();
                     DoGenerateBalls();
                     ProcessMove();
+                    printer.PrintField(data, "Process and generate:");
                 }
             }
         }
@@ -165,8 +166,9 @@ namespace Lines
 
         private void DoMove(Point start, Point end)
         {
-            throw new NotImplementedException();
+            var val = data[start.Y, start.X];
+            data[start.Y, start.X] = 0;
+            data[end.Y, end.X] = val;
         }
-
     }
 }

@@ -11,9 +11,45 @@ namespace LinesGame
         Occupied = -2,
         Empty = -1
     }
-
+   
     public class MoveProcessor
     {
+        public static List<Point> GetMatchingCells(int[,] data, Func<int, bool> MatchFilter, int limit = 0)
+        {
+            int cellsLimit = limit;
+            int height = data.GetLength(0);
+            int width = data.GetLength(1);
+
+            if (cellsLimit == 0) cellsLimit = height * width;
+            var cells = new List<Point>();
+
+            for (int i = 0; i < height; i++)
+                for (int j = 0; j < width; j++)
+                {
+                    if (MatchFilter(data[i, j]))
+                         cells.Add(new Point(j, i));
+                    if (cells.Count == limit)
+                        return cells;
+                }
+            return cells;
+        }
+
+        public static Point GetNearestOccupiedCell(int[,] data, Point start )
+        {
+            var preparedData = PrepareData(data);
+
+            List<Point> lastMarkedCells = new List<Point>();
+            var occupiedCells = new List<Point>();
+            lastMarkedCells.Add(start);
+            int markValue = 0;
+            preparedData[start.Y, start.X] = markValue;
+            while (lastMarkedCells.Count > 0 && occupiedCells.Count == 0)
+                MarkNextCells(preparedData, lastMarkedCells, ++markValue, occupiedCells);
+            if (occupiedCells.Count > 0)
+                return occupiedCells.First();
+            return start;
+        }
+
         public static int[,] PrepareData(int[,] data)
         {
             int height = data.GetLength(0);
@@ -40,14 +76,15 @@ namespace LinesGame
         public static void MarkCells(int[,] data, Point start)
         {
             List<Point> lastMarkedCells = new List<Point>();
+            var occupiedCells = new List<Point>();
             lastMarkedCells.Add(start);
             int markValue = 0;
             data[start.Y, start.X] = markValue;
             while (lastMarkedCells.Count > 0)
-                MarkNextCells(data, lastMarkedCells, ++markValue);
+                MarkNextCells(data, lastMarkedCells, ++markValue, occupiedCells);
         }
 
-        public static void MarkNextCells(int[,] data, List<Point> lastMarkedCells, int markValue)
+        public static void MarkNextCells(int[,] data, List<Point> lastMarkedCells, int markValue, List<Point> occupiedCells)
         {
             if (lastMarkedCells.Count == 0)
                 return;
@@ -71,6 +108,8 @@ namespace LinesGame
                             data[i, j] = markValue;
                             cellsToMark.Add(new Point(j, i));
                         }
+                        if(data[i, j] == (int)CellType.Occupied)
+                            occupiedCells.Add(new Point(j, i));
                     }
              
             });

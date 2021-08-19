@@ -1,13 +1,14 @@
-﻿using System.Drawing;
+﻿using LinesGame;
+using System.Drawing;
 
 namespace Lines
 {
     interface IGame
     {
-        int GameScore { get; }
+        int Score { get; }
+        int MoveCount { get; }
         GameStatus Status { get; }
-        bool Move(Point startPoint, Point endpoint);
-        bool Pass();
         void Start();
+        void SetStrategy(IStrategy strategy);
     }
 }
