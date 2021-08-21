@@ -8,8 +8,6 @@ namespace LinesGame
 {
     public class RandomStrategy : StrategyBase
     {
-        bool IsEmptyFilter(int value) { return value == 0; }
-        bool IsOccupiedFilter(int value) { return value != 0; }
         public override Move GetMove(int[,] data)
         {
             var emptyCell =  MoveProcessor.GetMatchingCells(data, IsEmptyFilter, 1).FirstOrDefault();

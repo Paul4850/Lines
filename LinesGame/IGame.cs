@@ -8,6 +8,7 @@ namespace Lines
         int Score { get; }
         int MoveCount { get; }
         GameStatus Status { get; }
+        void Play();
         void Start();
         void SetStrategy(IStrategy strategy);
     }
