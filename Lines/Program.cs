@@ -23,17 +23,18 @@ namespace Lines
             int gameNumber = 0;
             ulong totalScore = 0;
             Console.WriteLine("Start: {0}", DateTime.Now);
-
+            long totalMoveCount = 0;
             while (gameNumber++ < gamesCount)
             {
                 game.Start();
                 game.Play();
                 totalScore += (uint)game.Score;
-                if(game.Score > 75)
+                totalMoveCount += game.MoveCount;
+                if (game.Score > 190)
                     Console.WriteLine("Game {0}, moves: {1}, score: {2}", gameNumber, game.MoveCount, game.Score);
             }
 
-            Console.WriteLine("Everage score: {0}", totalScore/(double)gamesCount);
+            Console.WriteLine("Everage score: {0},  moves {1}", totalScore/(double)gamesCount, totalMoveCount/gamesCount);
             Console.WriteLine("End: {0}", DateTime.Now);
             Console.ReadLine();
         }

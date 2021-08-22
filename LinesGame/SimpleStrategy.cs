@@ -6,15 +6,20 @@ using System.Text;
 
 namespace LinesGame
 {
+    public class LineCell
+    {
+        public Point Location { get; set; }
+        public int BallColor { get; set; }
+        public int OccupiedCellsAround { get; set; }
+    }
+
     public class Line
     {
         public LineProperties LineProperties { get; set; }
         public Point Start { get; set; }
         public Point End { get; set; }
 
-        public Dictionary<Point, int> Cells { get; set; }
-        //public static Line Empty { get { return new Line {  BallsCount = 0, Color = 0, Start = Point.Empty, End = Point.Empty}; } }
-        //public static bool IsEmpty(Line line) { return line.BallsCount == 0 && line.Color == 0 && line.Start == Point.Empty && line.End == Point.Empty; } 
+        public List<LineCell> Cells { get; set; }
     }
 
     public class LineProperties {
@@ -46,8 +51,15 @@ namespace LinesGame
                 line =>
                 {
                     var color = line.LineProperties.Color;
-                    var emptyCells = line.Cells.Where(c => c.Value == EmptyCellValue).ToDictionary(p => p.Key, p=> p.Value).Keys.ToList();
-                    var lineOccupiedCells = line.Cells.Where(c => c.Value == color).ToDictionary(p => p.Key, p => p.Value).Keys.ToList();
+
+                    var lineCells = line.Cells.Where(c => c.BallColor == EmptyCellValue).ToList();
+                    lineCells.Sort(
+                        (c1, c2) => c1.OccupiedCellsAround.CompareTo(c2.OccupiedCellsAround)
+                        );
+                    lineCells.Reverse();
+                    var emptyCells = lineCells.Select(c => c.Location).ToList();
+
+                    var lineOccupiedCells = line.Cells.Where(c => c.BallColor == color).Select(c => c.Location); 
                     return  emptyCells.Any(
                         cell =>
                         {
@@ -107,7 +119,6 @@ namespace LinesGame
             return areasAndBorders;
         }
 
-
         LineProperties GetLineProperties(int[] cellValues)
         {
             var lineProperties = new LineProperties();
@@ -136,16 +147,28 @@ namespace LinesGame
                 for (int j = 0; j < width - minBallsInLine + 1; j++)
                 {
                     var row = CustomArray<int>.GetSubRow(data, i, j, minBallsInLine);
+                    var occupiedCellsAroud = GetOccupiedCellsAround(row);
+
                     var lineProps = GetLineProperties(row);
                     if (lineProps.HasSingleColor)
                     {
-                        var newLine = new Line() { Start = new Point(j, i), End = new Point(j + minBallsInLine - 1, i), LineProperties = lineProps,
-                            Cells = new  Dictionary<Point, int>()
+                        var newLine = new Line()
+                        {
+                            Start = new Point(j, i),
+                            End = new Point(j + minBallsInLine - 1, i),
+                            LineProperties = lineProps,
+                            Cells = new List<LineCell>()
                         };
-                        Enumerable.Range(j, minBallsInLine).ToList().ForEach(x => newLine.Cells.Add(new Point(x, i), row[x-j]));
+                        Enumerable.Range(j, minBallsInLine).ToList().ForEach(
+                            x => newLine.Cells.Add(
+                                new LineCell()
+                                {
+                                    Location = new Point(x, i),
+                                    BallColor = row[x - j],
+                                    OccupiedCellsAround = occupiedCellsAroud[x - j]
+                                }));
                         lines.Add(newLine);
                     }
-                        
                 }
             }
 
@@ -154,6 +177,7 @@ namespace LinesGame
                 for (int j = 0; j < width; j++)
                 {
                     var col = CustomArray<int>.GetSubColumn(data, j, i, minBallsInLine);
+                    var occupiedCellsAroud = GetOccupiedCellsAround(col);
                     var lineProps = GetLineProperties(col);
                     if (lineProps.HasSingleColor)
                     { 
@@ -162,9 +186,16 @@ namespace LinesGame
                             Start = new Point(j, i),
                             End = new Point(j, i + minBallsInLine - 1),
                             LineProperties = lineProps,
-                            Cells = new Dictionary<Point, int>()
+                            Cells = new List<LineCell>()
                         };
-                        Enumerable.Range(i, minBallsInLine).ToList().ForEach(y => newLine.Cells.Add(new Point(j, y), col[y - i]));
+                        Enumerable.Range(i, minBallsInLine).ToList().ForEach(
+                            y => newLine.Cells.Add(
+                                  new LineCell()
+                                  {
+                                      Location = new Point(j, y),
+                                      BallColor = col[y - i],
+                                      OccupiedCellsAround = occupiedCellsAroud[y - i]
+                                  }));
                         lines.Add(newLine);
                     }
                 }
@@ -173,6 +204,18 @@ namespace LinesGame
             lines.Sort((p1, p2) => p1.LineProperties.OneColorBallsCount.CompareTo(p2.LineProperties.OneColorBallsCount));
             lines.Reverse();
             return lines;
+        }
+        private List<int> GetOccupiedCellsAround(int[] row)
+        {
+            var rowEx = row.ToList();
+            rowEx.Insert(0, 0);
+            rowEx.Add(0);
+
+            var occupiedCellsAround = Enumerable.Range(1, minBallsInLine)
+              .Select(index => Math.Min(rowEx[index - 1], 1) + Math.Min(rowEx[index + 1], 1))
+              .ToList();
+
+            return occupiedCellsAround;
         }
     }
 }

@@ -81,7 +81,7 @@ namespace Lines
             printer.PrintScore(Score);
         }
 
-        private void ProcessMove()
+        private int ProcessMove()
         {
             var changes = MoveProcessor.ProcessMove(data, minBallsInLine);
             Score += MoveProcessor.CalcScore(changes, minBallsInLine);
@@ -97,6 +97,7 @@ namespace Lines
                    }
                 );
             emptyCellsNumber += cleanedCellsCount;
+            return cleanedCellsCount;
         }
 
         public void Move(Point start, Point end)
@@ -105,15 +106,15 @@ namespace Lines
             if (canMove)
             {
                 DoMove(start, end);
+                printer.PrintField(data, "Move:");
+                int cleanedCellsNumber = ProcessMove();
                 canGenerateBalls = CanGenerateBalls;
-                if (canGenerateBalls)
+                if (canGenerateBalls && cleanedCellsNumber == 0)
                 {
-                    printer.PrintField(data, "Move:");
-                    ProcessMove();
                     DoGenerateBalls();
                     ProcessMove();
-                    printer.PrintField(data, "Process and generate:");
                 }
+                printer.PrintField(data, "Process and generate:");
             }
         }
         public bool CanGenerateBalls => (emptyCellsNumber >= ballNumberToGenerate);
