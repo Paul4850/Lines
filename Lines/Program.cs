@@ -13,13 +13,14 @@ namespace Lines
             Console.WriteLine("Lines simulator");
 
             int maxMoves = 200;
-            var options = new FieldOptions {  Height  = 9, Width = 9, ColorNumber = 7, MinBallsInLine = 5  };
+            //var options = new FieldOptions {  Height  = 9, Width = 9, ColorNumber = 7, MinBallsInLine = 5  };
+            var options = new FieldOptions {  Height  = 7, Width = 7, ColorNumber = 7, MinBallsInLine = 5  };
             //var options = new FieldOptions { Height = 4, Width = 4, ColorNumber = 3, MinBallsInLine = 3 };
-            var printer = new EmptyPrinter();
-            //var printer = new ConsolePrinter();
+            //var printer = new EmptyPrinter();
+            var printer = new ConsolePrinter();
             var game = new Game(options, printer);
-            game.SetStrategy(new SimpleStrategy(options.MinBallsInLine));
-            int gamesCount = 10000;
+            game.SetStrategy(new SimpleStrategy(options.MinBallsInLine, options.ColorNumber, new Size(options.Width, options.Height)));
+            int gamesCount = 1;
             int gameNumber = 0;
             ulong totalScore = 0;
             Console.WriteLine("Start: {0}", DateTime.Now);

@@ -23,11 +23,11 @@ namespace LinesGame
     }
 
     public class LineProperties {
-        public int Color { get; set; }
-        public int OneColorBallsCount { get; set; }
+        public int MainColor { get; set; }
+        public int MainColorBallsCount { get; set; }
         public int EmptyCellsCount { get; set; }
         public int Length { get; set; }
-        public bool HasSingleColor { get { return OneColorBallsCount + EmptyCellsCount == Length && EmptyCellsCount < Length; } }
+        public bool HasSingleColor { get { return MainColorBallsCount + EmptyCellsCount == Length && EmptyCellsCount < Length; } }
     }
 
     public class SimpleStrategy : StrategyBase
@@ -35,22 +35,87 @@ namespace LinesGame
         public const int EmptyCellValue = 0;
 
         int minBallsInLine = 5;
-        public SimpleStrategy(int minBallsInLine)
+        int _colorCount = 7;
+        Size _fieldSize = new Size();
+        List<Line> uncompletedLines = new List<Line>();
+        int[,] data = null;
+        int _height = 0;
+        int _width = 0;
+        List<Line> calculatedLines = new List<Line>();
+        int[,] blockingScores = null;
+
+
+        public SimpleStrategy(int minBallsInLine, int colorCount, Size fieldSize)
         {
             this.minBallsInLine = minBallsInLine;
+            _colorCount = colorCount;
+            _fieldSize = fieldSize;
+            _height = fieldSize.Height;
+            _width = fieldSize.Width;
+            blockingScores = new int[_height, _width];
         }
+
+        // TODO:
+        // - pack balls within lines to fill gaps
+        // - take ball for gap from center rather than from border
+        // - remove balls of other color from almost completed lines. put them to complete other line if possible. 
+
+
+        //ball selection criteria
+        // - distance to the ball
+        // - lines blocked by the ball
+        // - lines including the ball
+        // - distance to center
+
+        double CalculeteBallPriority(int x, int y)
+        {
+            int ballColor = data[y, x];
+            int rowStart = Math.Max(1, x - minBallsInLine + 1);
+            int rowEnd = Math.Min(_width - 1, x + minBallsInLine - 1);
+
+            //Enumerable.Range(rowStart, rowEnd - rowStart).ToList().ForEach(
+            //     i => { 
+                    
+            //     }
+            //    );
+            for (int i = rowStart; i < rowEnd; i++)
+            { 
+                //CustomArray<int>.GetSubRow()
+            }
+
+
+
+            //uncompletedLines[0].Cells.Where( c => c.BallColor  == ballColor)
+            return 0;
+        }
+
+        //int [,] Calculate
+
+
+
+        IPrinter printer = new ConsolePrinter();
         public override Move GetMove(int[,] data)
         {
-            var lines = GetUncompletedLines(data);
+            this.data = data;
+            int _height = data.GetLength(0);
+            int _width = data.GetLength(1);
+
+            uncompletedLines = GetUncompletedLines(data);
             var areasAndBorders = GetAreasAndBorders(data);
+            printer.PrintField(blockingScores, "blockingScores:", false);
 
             var emptyCell = MoveProcessor.GetMatchingCells(data, IsEmptyFilter, 1).FirstOrDefault();
             Point occupiedCell = MoveProcessor.GetNearestOccupiedCell(data, emptyCell);
 
-            lines.Any(
+            //TODO:
+            //1. select all lines of a given length. 
+            //2. find colors of the line empty cells
+            //3. among borders of corresponding areas, find cell with maximum blocking score. choose it as the best ball
+            
+            uncompletedLines.Any(
                 line =>
                 {
-                    var color = line.LineProperties.Color;
+                    var color = line.LineProperties.MainColor;
 
                     var lineCells = line.Cells.Where(c => c.BallColor == EmptyCellValue).ToList();
                     lineCells.Sort(
@@ -124,35 +189,42 @@ namespace LinesGame
             var lineProperties = new LineProperties();
             int emptyCellsCount = cellValues.Where(v => v == EmptyCellValue).Count();
             if (emptyCellsCount == cellValues.Length) 
-                return new LineProperties() { OneColorBallsCount = 0,  Color = 0, EmptyCellsCount = cellValues.Length, Length  = cellValues.Length };
+                return new LineProperties() { MainColorBallsCount = 0,  MainColor = 0, EmptyCellsCount = cellValues.Length, Length  = cellValues.Length };
 
-            int ballColor = cellValues.FirstOrDefault(v => v != EmptyCellValue);
-            int ballCellsCount = cellValues.Where(v => v == ballColor).Count();
+            int[] counters = new int[_colorCount + 1];
+            var colorCounts = cellValues.Where(v => v != EmptyCellValue).Select(v => ++counters[v]).ToList();
+            int ballCellsCount = counters.Skip(1).Max();
 
             return new LineProperties() { 
-                OneColorBallsCount = ballCellsCount,  
-                Color = ballColor, 
+                MainColorBallsCount = colorCounts.Max(),
+                MainColor = Array.IndexOf(counters, ballCellsCount), 
                 EmptyCellsCount = emptyCellsCount, 
                 Length = cellValues.Length };
         }
 
-        List<Line> GetUncompletedLines(int[,] data)
+        List<Line> CalculateLines(int[,] data)
         {
             int height = data.GetLength(0);
             int width = data.GetLength(1);
             List<Line> lines = new List<Line>();
+            blockingScores = new int[height, width];
 
             for (int i = 0; i < height; i++)
             {
                 for (int j = 0; j < width - minBallsInLine + 1; j++)
                 {
                     var row = CustomArray<int>.GetSubRow(data, i, j, minBallsInLine);
-                    var occupiedCellsAroud = GetOccupiedCellsAround(row);
+                    var occupiedCellsAroud = GetOccupiedInlineCellsAround(row);
 
                     var lineProps = GetLineProperties(row);
-                    if (lineProps.HasSingleColor)
+                    if (lineProps.MainColorBallsCount >= minBallsInLine - 3)
                     {
-                        var newLine = new Line()
+                        for (int k = 0; k < row.Length; k++)
+                            if (row[k] != lineProps.MainColor && row[k] != EmptyCellValue)
+                                blockingScores[i, j+k] ++;
+                    }
+
+                    var newLine = new Line()
                         {
                             Start = new Point(j, i),
                             End = new Point(j + minBallsInLine - 1, i),
@@ -168,7 +240,6 @@ namespace LinesGame
                                     OccupiedCellsAround = occupiedCellsAroud[x - j]
                                 }));
                         lines.Add(newLine);
-                    }
                 }
             }
 
@@ -177,11 +248,16 @@ namespace LinesGame
                 for (int j = 0; j < width; j++)
                 {
                     var col = CustomArray<int>.GetSubColumn(data, j, i, minBallsInLine);
-                    var occupiedCellsAroud = GetOccupiedCellsAround(col);
+                    var occupiedCellsAroud = GetOccupiedInlineCellsAround(col);
                     var lineProps = GetLineProperties(col);
-                    if (lineProps.HasSingleColor)
-                    { 
-                        var newLine = new Line()
+                    
+                    if (lineProps.MainColorBallsCount >= minBallsInLine - 3)
+                    {
+                        for (int k = 0; k < col.Length; k++)
+                            if (col[k] != lineProps.MainColor && col[k] != EmptyCellValue)
+                                blockingScores[i + k, j]++;
+                    }
+                    var newLine = new Line()
                         {
                             Start = new Point(j, i),
                             End = new Point(j, i + minBallsInLine - 1),
@@ -197,15 +273,20 @@ namespace LinesGame
                                       OccupiedCellsAround = occupiedCellsAroud[y - i]
                                   }));
                         lines.Add(newLine);
-                    }
                 }
             }
+            return lines;
+        }
 
-            lines.Sort((p1, p2) => p1.LineProperties.OneColorBallsCount.CompareTo(p2.LineProperties.OneColorBallsCount));
+        List<Line> GetUncompletedLines(int[,] data) {
+            var lines = CalculateLines(data);
+            lines = lines.Where(l => l.LineProperties.HasSingleColor).ToList();
+            lines.Sort((p1, p2) => p1.LineProperties.MainColorBallsCount.CompareTo(p2.LineProperties.MainColorBallsCount));
             lines.Reverse();
             return lines;
         }
-        private List<int> GetOccupiedCellsAround(int[] row)
+
+        private List<int> GetOccupiedInlineCellsAround(int[] row)
         {
             var rowEx = row.ToList();
             rowEx.Insert(0, 0);
