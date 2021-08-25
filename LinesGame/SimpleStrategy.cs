@@ -42,9 +42,9 @@ namespace LinesGame
         int _height = 0;
         int _width = 0;
         List<Line> calculatedLines = new List<Line>();
-        int[,] blockingScores = null;
+        int[, ,] blockingScores = null;
 
-
+        int[] lineWeights;
         public SimpleStrategy(int minBallsInLine, int colorCount, Size fieldSize)
         {
             this.minBallsInLine = minBallsInLine;
@@ -52,7 +52,19 @@ namespace LinesGame
             _fieldSize = fieldSize;
             _height = fieldSize.Height;
             _width = fieldSize.Width;
-            blockingScores = new int[_height, _width];
+            blockingScores = new int[_height, _width, _colorCount + 1];
+            lineWeights = new int[minBallsInLine+1] ;
+            for (int i = 1; i < minBallsInLine + 1; i++)
+                lineWeights[i] = i;
+            lineWeights[minBallsInLine - 3] = 15;
+            lineWeights[minBallsInLine - 2] = 40;
+            lineWeights[minBallsInLine - 1] = 150;
+        }
+
+
+        public int GetStepsNumberToComplete(LineProperties lineProperties) 
+        { 
+            return lineProperties.EmptyCellsCount + 2 * (minBallsInLine - lineProperties.MainColorBallsCount - lineProperties.EmptyCellsCount); 
         }
 
         // TODO:
@@ -67,34 +79,48 @@ namespace LinesGame
         // - lines including the ball
         // - distance to center
 
-        double CalculeteBallPriority(int x, int y)
-        {
-            int ballColor = data[y, x];
-            int rowStart = Math.Max(1, x - minBallsInLine + 1);
-            int rowEnd = Math.Min(_width - 1, x + minBallsInLine - 1);
-
-            //Enumerable.Range(rowStart, rowEnd - rowStart).ToList().ForEach(
-            //     i => { 
-                    
-            //     }
-            //    );
-            for (int i = rowStart; i < rowEnd; i++)
-            { 
-                //CustomArray<int>.GetSubRow()
-            }
-
-
-
-            //uncompletedLines[0].Cells.Where( c => c.BallColor  == ballColor)
-            return 0;
-        }
-
-        //int [,] Calculate
-
-
-
+   
         IPrinter printer = new ConsolePrinter();
+
         public override Move GetMove(int[,] data)
+        {
+            Move move = new Move();
+            uncompletedLines = GetUncompletedLines(data);
+            var areasAndBorders = GetAreasAndBorders(data);
+
+            Dictionary<Move, int> moveCandidates = new Dictionary<Move, int>();
+            for (int color = 1; color < _colorCount+1; color++)
+            {
+                foreach (KeyValuePair<List<Point>, List<Point>> entry in areasAndBorders)
+                {
+                    var areaCells = entry.Key;
+                    var borderCells = entry.Value.Where(c => data[c.Y, c.X] == color).ToList();
+
+                    var borderCellsScores = borderCells.Select(
+                        cell => Enumerable.Range(1, _colorCount).Select( 
+                            c => c == color ? -blockingScores[cell.Y, cell.X, c] : blockingScores[cell.Y, cell.X, c]).Sum()
+                    );
+                    if (borderCellsScores.Count() == 0)
+                        continue;
+                    var mostBlockingScore = borderCellsScores.Max();
+                    var mostBlockingOccupiedCell = borderCells[Array.IndexOf(borderCellsScores.ToArray(), mostBlockingScore)];
+
+                    var areaCellsScores = areaCells.Select(
+                        cell => Enumerable.Range(1, _colorCount).Select(
+                            c => c == color ? -blockingScores[cell.Y, cell.X, c] : blockingScores[cell.Y, cell.X, c]).Sum()
+                    );
+                    var leastBlockingScore = areaCellsScores.Min();
+                    var leastBlockingEmptyCell = areaCells[Array.IndexOf(areaCellsScores.ToArray(), leastBlockingScore)];
+
+                    var award = mostBlockingScore - leastBlockingScore;
+                    moveCandidates.Add(new Move() { StartPoint = mostBlockingOccupiedCell, EndPoint = leastBlockingEmptyCell }, award);
+                }
+            }
+            var maxAward = moveCandidates.Values.Max();
+            move = moveCandidates.Where(entry => entry.Value == maxAward).FirstOrDefault().Key;
+            return move;
+        }
+        public Move GetMoveOld(int[,] data)
         {
             this.data = data;
             int _height = data.GetLength(0);
@@ -102,7 +128,7 @@ namespace LinesGame
 
             uncompletedLines = GetUncompletedLines(data);
             var areasAndBorders = GetAreasAndBorders(data);
-            printer.PrintField(blockingScores, "blockingScores:", false);
+            //printer.PrintField(blockingScores.GetValue([0], "blockingScores:", false);
 
             var emptyCell = MoveProcessor.GetMatchingCells(data, IsEmptyFilter, 1).FirstOrDefault();
             Point occupiedCell = MoveProcessor.GetNearestOccupiedCell(data, emptyCell);
@@ -184,6 +210,7 @@ namespace LinesGame
             return areasAndBorders;
         }
 
+        
         LineProperties GetLineProperties(int[] cellValues)
         {
             var lineProperties = new LineProperties();
@@ -202,12 +229,14 @@ namespace LinesGame
                 Length = cellValues.Length };
         }
 
+        
+
         List<Line> CalculateLines(int[,] data)
         {
             int height = data.GetLength(0);
             int width = data.GetLength(1);
             List<Line> lines = new List<Line>();
-            blockingScores = new int[height, width];
+            blockingScores = new int[height, width, _colorCount+1];
 
             for (int i = 0; i < height; i++)
             {
@@ -217,11 +246,11 @@ namespace LinesGame
                     var occupiedCellsAroud = GetOccupiedInlineCellsAround(row);
 
                     var lineProps = GetLineProperties(row);
-                    if (lineProps.MainColorBallsCount >= minBallsInLine - 3)
+                    if (lineProps.MainColorBallsCount > 0)
                     {
                         for (int k = 0; k < row.Length; k++)
-                            if (row[k] != lineProps.MainColor && row[k] != EmptyCellValue)
-                                blockingScores[i, j+k] ++;
+                            //if (row[k] != lineProps.MainColor)// && row[k] != EmptyCellValue)
+                                blockingScores[i, j+k, lineProps.MainColor] += lineWeights[lineProps.MainColorBallsCount];
                     }
 
                     var newLine = new Line()
@@ -251,11 +280,11 @@ namespace LinesGame
                     var occupiedCellsAroud = GetOccupiedInlineCellsAround(col);
                     var lineProps = GetLineProperties(col);
                     
-                    if (lineProps.MainColorBallsCount >= minBallsInLine - 3)
+                    if (lineProps.MainColorBallsCount > 0)//>= minBallsInLine - 3)
                     {
                         for (int k = 0; k < col.Length; k++)
-                            if (col[k] != lineProps.MainColor && col[k] != EmptyCellValue)
-                                blockingScores[i + k, j]++;
+                            //if (col[k] != lineProps.MainColor)// && col[k] != EmptyCellValue)
+                                blockingScores[i + k, j, lineProps.MainColor] += lineWeights[lineProps.MainColorBallsCount];
                     }
                     var newLine = new Line()
                         {
