@@ -14,30 +14,66 @@ namespace Lines
 
             int maxMoves = 200;
             var options = new FieldOptions {  Height  = 9, Width = 9, ColorNumber = 7, MinBallsInLine = 5  };
-            //var options = new FieldOptions {  Height  = 7, Width = 7, ColorNumber = 7, MinBallsInLine = 5  };
+            //var options = new FieldOptions { Height = 7, Width = 7, ColorNumber = 7, MinBallsInLine = 5 };
             //var options = new FieldOptions { Height = 4, Width = 4, ColorNumber = 3, MinBallsInLine = 3 };
             var printer = new EmptyPrinter();
             //var printer = new ConsolePrinter();
             var game = new Game(options, printer);
-            game.SetStrategy(new SimpleStrategy(options.MinBallsInLine, options.ColorNumber, new Size(options.Width, options.Height)));
-            int gamesCount = 10000;
+            SimpleStrategy strategy = (new SimpleStrategy(options.MinBallsInLine, options.ColorNumber, new Size(options.Width, options.Height)));
+            //strategy.BottleNeckWeight = 0.025;
+            //strategy.DistanceWeight = 0.055;
+
+            strategy.BottleNeckWeight = 0.025;
+            strategy.DistanceWeight = 17;
+
+            game.SetStrategy(strategy);
+            int gamesCount = 1000;
             int gameNumber = 0;
-            ulong totalScore = 0;
+            double totalScore = 0;
             Console.WriteLine("Start: {0}", DateTime.Now);
-            long totalMoveCount = 0;
+            double totalMoveCount = 0;
             while (gameNumber++ < gamesCount)
             {
-                game.Start();
-                game.Play();
-                totalScore += (uint)game.Score;
-                totalMoveCount += game.MoveCount;
-                if (game.Score > 140)
-                    Console.WriteLine("Game {0}, moves: {1}, score: {2}", gameNumber, game.MoveCount, game.Score);
+                double subtotalScore = 0;
+                double subtotalMoves = 0;
+                int batchSize = 1;
+                for (int i = 0; i < batchSize; i++)
+                {
+                    game.Start();
+                    game.Play();
+                    subtotalScore += game.Score;
+                    subtotalMoves+= game.MoveCount;
+                }
+                totalScore += subtotalScore/ batchSize;
+                totalMoveCount += subtotalMoves/ batchSize;
+
+                double avgScore = subtotalScore / batchSize;
+                if (avgScore >= 180)
+                    Console.WriteLine("Game {0}, BottleNeckWeight: {3:F3}, moves: {1:F3}, score: {2:F3}", gameNumber, subtotalMoves/ batchSize, avgScore, strategy.DistanceWeight);
+                //Console.WriteLine("Game {0}, moves: {1}, score: {2}", gameNumber, game.MoveCount, game.Score);
+                //strategy.BottleNeckWeight += 0.005;
+                //strategy.DistanceWeight += 2;
             }
 
-            Console.WriteLine("Everage score: {0},  moves {1}", totalScore/(double)gamesCount, totalMoveCount/gamesCount);
+            Console.WriteLine("Everage score: {0:F3},  moves {1:F3}", totalScore/(double)gamesCount, totalMoveCount/gamesCount);
             Console.WriteLine("End: {0}", DateTime.Now);
             Console.ReadLine();
         }
+
+        static void PrintComb(int length)
+        {
+            int maxCombinations = 1 << length;
+            for (int i = 1; i < maxCombinations; i++)
+            {
+                string res = "";
+                for (int offset = 0; offset < length; offset++)
+                {
+                    var exists = i >> offset & 1;
+                    res += exists;// (exists == 1? 1 : "o");
+                }
+                Console.WriteLine(res);
+            }
+        }
+
     }
 }

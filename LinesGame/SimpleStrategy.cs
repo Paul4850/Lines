@@ -42,9 +42,14 @@ namespace LinesGame
         int _height = 0;
         int _width = 0;
         List<Line> calculatedLines = new List<Line>();
-        int[, ,] blockingScores = null;
+        double[, ,] blockingScores = null;
 
-        int[] lineWeights;
+        double[,] bottleNeckScores = null;
+
+        double[] lineWeights;
+
+        double bottleNeckWeight = 1;
+        double distanceWeight = 0;
         public SimpleStrategy(int minBallsInLine, int colorCount, Size fieldSize)
         {
             this.minBallsInLine = minBallsInLine;
@@ -52,15 +57,19 @@ namespace LinesGame
             _fieldSize = fieldSize;
             _height = fieldSize.Height;
             _width = fieldSize.Width;
-            blockingScores = new int[_height, _width, _colorCount + 1];
-            lineWeights = new int[minBallsInLine+1] ;
+            blockingScores = new double[_height, _width, _colorCount + 1];
+            bottleNeckScores = new double[_height, _width];
+            lineWeights = new double[minBallsInLine+1] ;
             for (int i = 1; i < minBallsInLine + 1; i++)
                 lineWeights[i] = i;
             lineWeights[minBallsInLine - 3] = 15;
             lineWeights[minBallsInLine - 2] = 40;
             lineWeights[minBallsInLine - 1] = 150;
+            //lineCompletenessWeights = new double[minBallsInLine * 2];
+            //lineCompletenessWeights = new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+            lineCompletenessWeights = new double[] {300, 150, 40, 15, 3, 1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
         }
-
+        double[] lineCompletenessWeights;
 
         public int GetStepsNumberToComplete(LineProperties lineProperties) 
         { 
@@ -82,13 +91,137 @@ namespace LinesGame
    
         IPrinter printer = new ConsolePrinter();
 
+        void PrintComb(int length)
+        {
+            int maxCombinations = 1 >> length;
+            for (int i = 1; i < maxCombinations; i++)
+            {
+                string res = "";
+                for (int offset = 0; offset < length; offset++)
+                {
+                    var exists = i >> offset & 1;
+                    res += exists.ToString();
+
+                    Console.WriteLine(res);
+                }
+            }
+        }
+
+        List<Point> GetCellsAround(Point cell, int[,] data)
+        {
+
+            int top = Math.Max(0, cell.Y - 1);
+            int left = Math.Max(0, cell.X - 1);
+            int bottom = Math.Min(data.GetLength(0) - 1, cell.Y + 1);
+            int right = Math.Min(data.GetLength(1) - 1, cell.X + 1);
+
+            List<Point> cellsAround = new List<Point>();
+
+            for (int i = top; i <= bottom; i++)
+                for (int j = left; j <= right; j++)
+                {
+                    if (Math.Abs(cell.Y - i) == Math.Abs(cell.X - j))
+                        continue;
+                    cellsAround.Add(new Point(j, i));
+                }
+            return cellsAround;
+        }
+
+        public void CalculateBottleNeckScores(Dictionary<List<Point>, List<Point>> areasAndBorders, int[,]data)
+        {
+            if (areasAndBorders.Count < 2) return;
+
+            var borders = areasAndBorders.Values.ToArray();
+            var areas = areasAndBorders.Keys.ToArray();
+
+            var allBorders = new List<Point>();
+            borders.ToList().ForEach(b => allBorders.AddRange(b));
+            allBorders = allBorders.Distinct().ToList();
+
+            allBorders.ForEach(
+                b =>
+                {
+                    var cellsAround = GetCellsAround(b, data);
+                    List<List<Point>> containingAreas = new List<List<Point>>();
+                    cellsAround.Where(c => data[c.Y, c.X] == EmptyCellValue).ToList().ForEach(
+                        c =>
+                        {
+                            containingAreas.AddRange(areas.Where(a => a.Contains(c)));
+                        }
+                    );
+                    containingAreas = containingAreas.Distinct().ToList();
+                    if (containingAreas.Count > 1)
+                    {
+                        var areasCellCounts = containingAreas.Select(a => a.Count);
+                        bottleNeckScores[b.Y, b.X] = areasCellCounts.Aggregate((total, next) => total * next);
+                    }    
+                }
+                );
+
+            //var areasCellCounts = areasAndBorders.Values.Select( a => a.Count).ToList();
+            //int length = borders.Length;
+            //int maxCombinations = 1 << length;
+            //Dictionary<int, List<Point>> intersections = new Dictionary<int, List<Point>>();
+            //for (int bordersCount = borders.Length; bordersCount > 1; bordersCount--)
+            //{
+            //    for (int i = 1; i < maxCombinations; i++)
+            //    {
+            //        int count = 0;
+            //        for (int offset = 0; offset < length; offset++)
+            //            count += i >> offset & 1;
+            //        if (count != bordersCount)
+            //            continue;
+
+            //        List<Point> intersection = null;
+            //        for (int offset = 0; offset < length; offset++)
+            //        {
+            //            var exists = (i >> offset & 1) == 1;
+            //            if (exists)
+            //            {
+            //                if (intersection == null)
+            //                {
+            //                    intersection = new List<Point>();
+            //                    intersection.AddRange(borders[offset]);
+            //                }
+            //                else
+            //                    intersection = intersection.Intersect(borders[offset]).ToList();
+            //                if (intersection.Count == 0)
+            //                    break;
+            //            }
+            //        }
+            //        intersections.Values.ToList().ForEach(ii => intersection = intersection.Intersect(ii).ToList());
+            //        if (intersection.Count > 0)
+            //        {
+            //            int totalAreaCellCount = 0;
+            //            for (int offset = 0; offset < length; offset++)
+            //            {
+            //                var exists = (i >> offset & 1) == 1;
+            //                if (exists)
+            //                    totalAreaCellCount += areasCellCounts[offset];
+            //            }
+            //            intersections.Add(totalAreaCellCount, intersection);
+            //        }
+            //    }
+            //}
+
+
+            //foreach (KeyValuePair<List<Point>, List<Point>> entry in areasAndBorders)
+            //{
+            //    var areaCells = entry.Key;
+            //    var borderCells = entry.Value;
+                
+            //}
+        }
+
+
         public override Move GetMove(int[,] data)
         {
             Move move = new Move();
             uncompletedLines = GetUncompletedLines(data);
             var areasAndBorders = GetAreasAndBorders(data);
+            CalculateBottleNeckScores(areasAndBorders, data);
 
-            Dictionary<Move, int> moveCandidates = new Dictionary<Move, int>();
+            Dictionary<Move, double> moveCandidates = new Dictionary<Move, double>();
             for (int color = 1; color < _colorCount+1; color++)
             {
                 foreach (KeyValuePair<List<Point>, List<Point>> entry in areasAndBorders)
@@ -97,8 +230,14 @@ namespace LinesGame
                     var borderCells = entry.Value.Where(c => data[c.Y, c.X] == color).ToList();
 
                     var borderCellsScores = borderCells.Select(
-                        cell => Enumerable.Range(1, _colorCount).Select( 
-                            c => c == color ? -blockingScores[cell.Y, cell.X, c] : blockingScores[cell.Y, cell.X, c]).Sum()
+
+                        cell =>
+                        {
+                            double  score = Enumerable.Range(1, _colorCount).Select(
+                                c => c == color ? -blockingScores[cell.Y, cell.X, c] : blockingScores[cell.Y, cell.X, c]).Sum();
+                            //score += bottleNeckScores[cell.Y, cell.X] * BottleNeckWeight;
+                            return score;
+                        } 
                     );
                     if (borderCellsScores.Count() == 0)
                         continue;
@@ -112,7 +251,8 @@ namespace LinesGame
                     var leastBlockingScore = areaCellsScores.Min();
                     var leastBlockingEmptyCell = areaCells[Array.IndexOf(areaCellsScores.ToArray(), leastBlockingScore)];
 
-                    var award = mostBlockingScore - leastBlockingScore;
+                    var distance = Math.Abs(mostBlockingOccupiedCell.X - leastBlockingEmptyCell.X) + Math.Abs(mostBlockingOccupiedCell.X - leastBlockingEmptyCell.X);
+                    var award = (mostBlockingScore - leastBlockingScore);// * Math.Log(distance);
                     moveCandidates.Add(new Move() { StartPoint = mostBlockingOccupiedCell, EndPoint = leastBlockingEmptyCell }, award);
                 }
             }
@@ -180,6 +320,9 @@ namespace LinesGame
 
         List<Line> linesToComplete = new List<Line>();
 
+        public double BottleNeckWeight { get => bottleNeckWeight; set => bottleNeckWeight = value; }
+        public double DistanceWeight { get => distanceWeight; set => distanceWeight = value; }
+
         Dictionary<List<Point>, List<Point>> GetAreasAndBorders(int[,] inputData)
         {
             var preparedData = MoveProcessor.PrepareData(inputData);
@@ -236,7 +379,7 @@ namespace LinesGame
             int height = data.GetLength(0);
             int width = data.GetLength(1);
             List<Line> lines = new List<Line>();
-            blockingScores = new int[height, width, _colorCount+1];
+            blockingScores = new double[height, width, _colorCount+1];
 
             for (int i = 0; i < height; i++)
             {
@@ -249,8 +392,11 @@ namespace LinesGame
                     if (lineProps.MainColorBallsCount > 0)
                     {
                         for (int k = 0; k < row.Length; k++)
-                            //if (row[k] != lineProps.MainColor)// && row[k] != EmptyCellValue)
-                                blockingScores[i, j+k, lineProps.MainColor] += lineWeights[lineProps.MainColorBallsCount];
+                        {
+                            int stepsToComplete = GetStepsNumberToComplete(lineProps);
+                            blockingScores[i, j + k, lineProps.MainColor] += lineCompletenessWeights[stepsToComplete] * lineWeights[lineProps.MainColorBallsCount];
+                        }
+                        //if (row[k] != lineProps.MainColor)// && row[k] != EmptyCellValue)
                     }
 
                     var newLine = new Line()
@@ -283,8 +429,14 @@ namespace LinesGame
                     if (lineProps.MainColorBallsCount > 0)//>= minBallsInLine - 3)
                     {
                         for (int k = 0; k < col.Length; k++)
-                            //if (col[k] != lineProps.MainColor)// && col[k] != EmptyCellValue)
-                                blockingScores[i + k, j, lineProps.MainColor] += lineWeights[lineProps.MainColorBallsCount];
+                        //if (col[k] != lineProps.MainColor)// && col[k] != EmptyCellValue)
+                        {
+                            int stepsToComplete = GetStepsNumberToComplete(lineProps);
+                            blockingScores[i + k, j, lineProps.MainColor] += lineWeights[lineProps.MainColorBallsCount] * lineCompletenessWeights[stepsToComplete];
+                        }
+                        //blockingScores[i + k, j, lineProps.MainColor] += lineWeights[lineProps.MainColorBallsCount];
+
+
                     }
                     var newLine = new Line()
                         {
