@@ -18,6 +18,7 @@ namespace LinesGame
 
     public abstract class StrategyBase : IStrategy
     {
+        public const int EmptyCellValue = 0;
         protected bool IsEmptyFilter(int value) { return value == 0; }
         protected bool IsOccupiedFilter(int value) { return value != 0; }
         public abstract Move GetMove(int[,] data);
