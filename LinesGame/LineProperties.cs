@@ -5,6 +5,11 @@ using System.Text;
 
 namespace LinesGame
 {
+    public class Cell
+    {
+        public Point Point { get; set; }
+        public int Color { get; set; }
+    }
     public class LineCell
     {
         public Point Location { get; set; }

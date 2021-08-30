@@ -58,6 +58,15 @@ namespace LinesGame
             return areasAndBorders;
         }
 
+        public static int GetMaxColorCount(int[] cellValues, int colorCount)
+        {
+            int[] counters = new int[colorCount + 1];
+            cellValues.ToList().ForEach(v => ++counters[v]);
+
+            return  counters.Skip(1).Max();
+        }
+
+
         public static LineProperties GetLineProperties(int[] cellValues, int colorCount)
         {
             int emptyCellsCount = cellValues.Where(v => v == StrategyBase.EmptyCellValue).Count();
@@ -67,9 +76,7 @@ namespace LinesGame
             int[] counters = new int[colorCount + 1];
             cellValues.ToList().ForEach(v => ++counters[v]);
 
-            //var maxColorCount = counters.Max();//cellValues.Where(v => v != EmptyCellValue).Select(v => ++counters[v]).Max();
             int ballCellsCount = counters.Skip(1).Max();
-            //counters.Select( count => count == ballCellsCount )
             var mainColors = new List<int>();
 
             for (int i = 1; i < counters.Length; i++)
@@ -89,7 +96,7 @@ namespace LinesGame
             {
                 GapScore = gapScore,
                 MainColorBallsCount = ballCellsCount,
-                MainColor = mainColor,//Array.IndexOf(counters, ballCellsCount), 
+                MainColor = mainColor,
                 EmptyCellsCount = emptyCellsCount,
                 Length = cellValues.Length
             };

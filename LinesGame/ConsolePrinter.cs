@@ -6,13 +6,13 @@ namespace LinesGame
 {
     public interface IPrinter
     {
-        void PrintField(int[,] data, string label = "",  bool useLetters = true);
+        void PrintField<T>(T[,] data, string label = "",  bool useLetters = true);
         void PrintScore(int score);
     }
 
     public class EmptyPrinter : IPrinter
     {
-        public void PrintField(int[,] data, string label = "", bool useLetters = true)
+        public void PrintField<T>(T[,] data, string label = "", bool useLetters = true)
         {
         }
 
@@ -23,7 +23,7 @@ namespace LinesGame
     }
     public class ConsolePrinter: IPrinter
     {
-        public void PrintField(int [,] data , string label = "", bool useLetters = true)
+        public void PrintField<T>(T [,] data , string label = "", bool useLetters = true)
         {
             char[] letters = new char[] {'*', '*', '0', 'R', 'G', 'B', 'Y', 'P', 'T', 'N' };
             char[] numbers = new char[] {'*', '_', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'M' };
@@ -34,7 +34,7 @@ namespace LinesGame
             {
                 for (int j = 0; j < data.GetLength(1); j++)
                 {
-                    var value = Math.Max(data[i, j], minValue) - minValue;
+                    var value = Math.Max(Convert.ToInt32(data[i, j]), minValue) - minValue;
                     value = Math.Min(value, wildcards.Length - 1);
                     Console.Write(wildcards[value] + " ");
                 }
