@@ -16,8 +16,8 @@ namespace Lines
             var options = new FieldOptions { Height = 9, Width = 9, ColorNumber = 7, MinBallsInLine = 5 };
             //var options = new FieldOptions { Height = 7, Width = 7, ColorNumber = 5, MinBallsInLine = 5 };
             //var options = new FieldOptions { Height = 4, Width = 4, ColorNumber = 3, MinBallsInLine = 3 };
-            var printer = new EmptyPrinter();
-            //var printer = new ConsolePrinter();
+            //var printer = new EmptyPrinter();
+            var printer = new ConsolePrinter();
             var game = new Game(options, printer);
             SimpleStrategy simpleStrategy = (new SimpleStrategy(options.MinBallsInLine, options.ColorNumber, new Size(options.Width, options.Height)));
 
@@ -51,7 +51,7 @@ namespace Lines
                 totalMoveCount += subtotalMoves/ batchSize;
 
                 double avgScore = subtotalScore / batchSize;
-                if (avgScore >= 190)
+                if (avgScore >= 250)
                     Console.WriteLine("Game {0}, DistanceWeight: {3:F3}, moves: {1:F3}, score: {2:F3}", gameNumber, subtotalMoves/ batchSize, avgScore, 0);
                 //Console.WriteLine("Game {0}, moves: {1}, score: {2}", gameNumber, game.MoveCount, game.Score);
                 //strategy.BottleNeckWeight += 0.005;

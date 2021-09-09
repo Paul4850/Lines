@@ -31,6 +31,8 @@ namespace LinesGame
         ScoreStatus[,] scoreStatuses = null;
         double[,] totalBlockingScores;
         List<Cell> postponedChanges = new List<Cell>();
+        double lineCenterScale = 2;
+
 
         //IPrinter printer = new ConsolePrinter();
         IPrinter printer = new EmptyPrinter();
@@ -230,6 +232,7 @@ namespace LinesGame
                         int rightColor = j < width ? data[i, j + 1] : -1;
 
                         var mainColorBallsCount = StrategyHelper.GetMaxColorCount(row, _colorCount);
+
                         //var lineProps = StrategyHelper.GetLineProperties(row, _colorCount);
                         if (mainColorBallsCount > 0)
                         {
@@ -247,8 +250,17 @@ namespace LinesGame
                                     if (k == row.Length - 1 && leftColor == EmptyCellValue)
                                         continue;
                                 }
-                                blockingScores[i, j + k, lineProps.MainColor] += lineCompletenessWeights[stepsToComplete] * lineWeights[lineProps.MainColorBallsCount];
-                                totalBlockingScores[i, j+k] += lineCompletenessWeights[stepsToComplete] * lineWeights[lineProps.MainColorBallsCount];
+
+                                var distanceToLineCenter = Math.Abs(lineProps.LineColorCenter - k) / row.Length;
+                                var lineCenterFactor = (lineCenterScale - distanceToLineCenter)/ lineCenterScale;
+                                var score = lineCompletenessWeights[stepsToComplete] * lineWeights[lineProps.MainColorBallsCount] * lineCenterFactor;
+
+                                //double fieldCenterDistance = GetDistanceToCenter(new Point(j+k, i)) / (0.5 * (_height + _width));
+                                //double fieldCenterFactor = (fieldCenterScale - fieldCenterDistance) / fieldCenterScale;
+                                //score *= fieldCenterFactor;
+
+                                blockingScores[i, j + k, lineProps.MainColor] += score;
+                                totalBlockingScores[i, j+k] += score;
                             }
                         }
                     }
@@ -290,8 +302,18 @@ namespace LinesGame
                                         continue;
                                 }
 
-                                blockingScores[i + k, j, lineProps.MainColor] += lineWeights[lineProps.MainColorBallsCount] * lineCompletenessWeights[stepsToComplete];
-                                totalBlockingScores[i + k, j] += lineWeights[lineProps.MainColorBallsCount] * lineCompletenessWeights[stepsToComplete];
+
+                                var distanceToLineCenter = Math.Abs(lineProps.LineColorCenter - k) / col.Length;
+                                var lineCenterFactor = (lineCenterScale - distanceToLineCenter) / lineCenterScale;
+                                
+                                var score = lineCompletenessWeights[stepsToComplete] * lineWeights[lineProps.MainColorBallsCount] * lineCenterFactor;
+
+                                //double fieldCenterDistance = GetDistanceToCenter(new Point(j, i + k))/(0.5*(_height + _width));
+                                //double fieldCenterFactor = (fieldCenterScale - fieldCenterDistance) / fieldCenterScale;
+                                //score *= fieldCenterFactor;
+
+                                blockingScores[i + k, j, lineProps.MainColor] += score;
+                                totalBlockingScores[i + k, j] += score;
                             }
                         }
                     }
@@ -300,5 +322,7 @@ namespace LinesGame
             printer.PrintField(scoreStatuses, "scoreStatuses", false);
             SetAllScoreStatuses(ScoreStatus.Updated);
         }
+
+        double fieldCenterScale = 2;
     }
 }

@@ -92,8 +92,15 @@ namespace LinesGame
             double gapScore = colorsByGaps.Count == 0 ? 0 : colorsByGaps.Values.Min();
             var mainColor = colorsByGaps.FirstOrDefault(entry => entry.Value == gapScore).Key;
 
+            double lineColorCenter = 0;
+            for (int i = 0; i < cellValues.Length; i++)
+                if (cellValues[i] == mainColor)
+                    lineColorCenter += i;
+            lineColorCenter /= ballCellsCount;
+
             return new LineProperties()
             {
+                LineColorCenter = lineColorCenter,
                 GapScore = gapScore,
                 MainColorBallsCount = ballCellsCount,
                 MainColor = mainColor,

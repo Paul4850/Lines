@@ -34,5 +34,6 @@ namespace LinesGame
         public int Length { get; set; }
         public bool HasSingleColor { get { return MainColorBallsCount + EmptyCellsCount == Length && EmptyCellsCount < Length; } }
         public double GapScore { get; set; }
+        public double LineColorCenter { get; set; }
     }
 }
