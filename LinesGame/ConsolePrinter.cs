@@ -1,15 +1,10 @@
-﻿using System;
+﻿using LinesAPI;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace LinesGame
 {
-    public interface IPrinter
-    {
-        void PrintField<T>(T[,] data, string label = "",  bool useLetters = true);
-        void PrintScore(int score);
-    }
-
     public class EmptyPrinter : IPrinter
     {
         public void PrintField<T>(T[,] data, string label = "", bool useLetters = true)
@@ -21,6 +16,7 @@ namespace LinesGame
             ;
         }
     }
+
     public class ConsolePrinter: IPrinter
     {
         public void PrintField<T>(T [,] data , string label = "", bool useLetters = true)

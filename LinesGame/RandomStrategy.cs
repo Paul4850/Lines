@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LinesAPI;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace LinesGame
         public override Move GetMove(int[,] data)
         {
             var emptyCell =  MoveProcessor.GetMatchingCells(data, IsEmptyFilter, 1).FirstOrDefault();
-            Point occupiedCell = MoveProcessor.GetNearestOccupiedCell(data, emptyCell);
+            Point occupiedCell = MoveHelper.GetNearestOccupiedCell(data, emptyCell);
             return new Move { StartPoint = occupiedCell, EndPoint = emptyCell };
         }
     }

@@ -1,4 +1,5 @@
-﻿using LinesGame;
+﻿using LinesAPI;
+using LinesGame;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -28,7 +29,7 @@ namespace Lines
         private int minBallsInLine = 5;
         IPrinter printer = null;
 
-        public GameField(FieldOptions options, IPrinter printer)
+        public GameField(GameOptions options, IPrinter printer= null)
         {
             this.printer = printer;
             this.width = options.Width;
@@ -44,7 +45,7 @@ namespace Lines
 
         public int[,] Data { get { return data; } }
 
-        public BallColor[] NextColorsToGenerate { get { return nextColorsToGenerate; } }
+        //public BallColor[] NextColorsToGenerate { get { return nextColorsToGenerate; } }
 
         private void Intialize()
         {
@@ -69,22 +70,17 @@ namespace Lines
             if (canGenerateBalls)
             {
                 DoGenerateBalls();
-                printer.PrintField(data);
+                printer?.PrintField(data);
                 ProcessMove();
             }
-            printer.PrintField(data);
-            PrintScore();
-        }
-
-        private void PrintScore()
-        {
-            printer.PrintScore(Score);
+            printer?.PrintField(data);
+            printer?.PrintScore(Score);
         }
 
         private int ProcessMove()
         {
-            var changes = MoveProcessor.ProcessMove(data, minBallsInLine);
-            Score += MoveProcessor.CalcScore(changes, minBallsInLine);
+            var changes = MoveHelper.ProcessMove(data, minBallsInLine);
+            Score += MoveHelper.CalcScore(changes, minBallsInLine);
 
             int cleanedCellsCount = 0;
             changes.Values.ToList().ForEach(
@@ -106,7 +102,7 @@ namespace Lines
             if (canMove)
             {
                 DoMove(start, end);
-                printer.PrintField(data, "Move:");
+                printer?.PrintField(data, "Move:");
                 int cleanedCellsNumber = ProcessMove();
                 canGenerateBalls = CanGenerateBalls;
                 if (canGenerateBalls && cleanedCellsNumber == 0)
@@ -114,21 +110,12 @@ namespace Lines
                     DoGenerateBalls();
                     ProcessMove();
                 }
-                printer.PrintField(data, "Process and generate:");
+                printer?.PrintField(data, "Process and generate:");
             }
         }
         public bool CanGenerateBalls => (emptyCellsNumber >= ballNumberToGenerate);
 
         public int Score { get => score; set => score = value; }
-
-        public Point? GetFirstEmptyPoint()
-        {
-            for (int i = 0; i < height; i++)
-                for (int j = 0; j < width; j++)
-                    if (data[i, j] == 0)
-                        return new Point(j, i);
-            return null;
-        }
 
         private void DoGenerateBalls()
         {

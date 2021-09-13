@@ -4,9 +4,8 @@ using System.Text;
 
 namespace LinesGame
 {
-    public class  FieldOptions
+    public class  GameOptions
     {
-        public FieldOptions() { }
         public int Height { get; set; }
         public int Width { get; set; }
         public int ColorNumber { get; set; }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LinesAPI;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -22,7 +23,6 @@ namespace LinesGame
     //1. [del] select all lines of a given length. 
     //2. [del] find colors of the line empty cells
     //3. + among borders of corresponding areas, find cell with maximum blocking score. choose it as the best ball
-
 
     public class SimpleStrategy : StrategyBase
     {
@@ -53,7 +53,7 @@ namespace LinesGame
             var areasAndBorders = StrategyHelper.GetAreasAndBorders(data);
 
             var emptyCell = MoveProcessor.GetMatchingCells(data, IsEmptyFilter, 1).FirstOrDefault();
-            Point occupiedCell = MoveProcessor.GetNearestOccupiedCell(data, emptyCell);
+            Point occupiedCell = MoveHelper.GetNearestOccupiedCell(data, emptyCell);
             
             uncompletedLines.Any(
                 line =>

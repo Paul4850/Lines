@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LinesAPI;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -10,7 +11,6 @@ namespace LinesGame
     {
         public static List<Point> GetCellsAround(Point cell, int[,] data)
         {
-
             int top = Math.Max(0, cell.Y - 1);
             int left = Math.Max(0, cell.X - 1);
             int bottom = Math.Min(data.GetLength(0) - 1, cell.Y + 1);
@@ -30,7 +30,7 @@ namespace LinesGame
 
         public static Dictionary<List<Point>, List<Point>> GetAreasAndBorders(int[,] inputData)
         {
-            var preparedData = MoveProcessor.PrepareData(inputData);
+            var preparedData = MoveHelper.PrepareData(inputData);
 
             Func<int, bool> EmptyCellFilter = (x) => { return x == (int)CellType.Empty; };
             var emptyCells = MoveProcessor.GetMatchingCells(preparedData, EmptyCellFilter, 1);
@@ -48,7 +48,7 @@ namespace LinesGame
                 preparedData[start.Y, start.X] = markValue;
                 while (lastMarkedCells.Count > 0)
                 {
-                    MoveProcessor.MarkNextCells(preparedData, lastMarkedCells, ++markValue, occupiedCells);
+                    MoveHelper.MarkNextCells(preparedData, lastMarkedCells, ++markValue, occupiedCells);
                     markedCells.AddRange(lastMarkedCells);
                 }
 
@@ -65,7 +65,6 @@ namespace LinesGame
 
             return  counters.Skip(1).Max();
         }
-
 
         public static LineProperties GetLineProperties(int[] cellValues, int colorCount)
         {
