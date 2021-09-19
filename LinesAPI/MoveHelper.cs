@@ -170,7 +170,7 @@ namespace LinesAPI
         {
             if (lastMarkedCells.Count == 0)
                 return;
-            var cell = lastMarkedCells.FirstOrDefault();
+            //var cell = lastMarkedCells.FirstOrDefault();
             var cellsToMark = new List<Point>();
 
             lastMarkedCells.ForEach(cell =>

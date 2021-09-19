@@ -33,7 +33,7 @@ namespace LinesGame
         double[,] totalBlockingScores;
         List<Cell> postponedChanges = new List<Cell>();
         double lineCenterScale = 2;
-
+        double fieldCenterScale = 2;
 
         //IPrinter printer = new ConsolePrinter();
         IPrinter printer = new EmptyPrinter();
@@ -324,6 +324,5 @@ namespace LinesGame
             SetAllScoreStatuses(ScoreStatus.Updated);
         }
 
-        double fieldCenterScale = 2;
     }
 }
